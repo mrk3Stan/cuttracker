@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft, Plus, Minus, Save, AlertTriangle, ArrowUp, ArrowDown,
@@ -33,7 +33,6 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
     return initial;
   });
 
-  // Track which sets are marked "done"
   const [completedSets, setCompletedSets] = useState(() => {
     const initial = {};
     exercises.forEach((ex) => {
@@ -47,7 +46,6 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
   const [timerSeconds, setTimerSeconds] = useState(0);
   const [restTarget, setRestTarget] = useState(PROFILE.restPeriod || 90);
 
-  // Countdown: schedule one tick per second while active
   useEffect(() => {
     if (!timerActive || timerSeconds <= 0) return;
     const timeout = setTimeout(() => {
@@ -150,7 +148,11 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
 
   // --------------- RENDER ---------------
   return (
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="overflow-x-hidden"
+    >
       {/* Back button */}
       <button
         onClick={handleBack}
@@ -163,12 +165,12 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
       <p className="text-gray-500 text-sm mb-2">{todayFormatted()}</p>
 
       {/* Rest Period Setting */}
-      <div className="flex items-center justify-between bg-gray-900 rounded-xl px-4 py-2.5 mb-4">
+      <div className="flex items-center justify-between bg-gray-900 rounded-xl px-3 py-2.5 mb-4">
         <div className="flex items-center gap-2 text-sm text-gray-400">
-          <Timer size={16} />
-          <span>Rest Period</span>
+          <Timer size={16} className="flex-shrink-0" />
+          <span>Rest</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setRestTarget((prev) => Math.max(15, prev - 15))}
             className="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 rounded-lg w-8 h-8 flex items-center justify-center text-gray-400 transition-colors"
@@ -198,10 +200,10 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
           <Card key={ex}>
             {/* Exercise Header */}
             <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold">{ex}</h3>
+              <h3 className="font-semibold text-sm sm:text-base truncate mr-2">{ex}</h3>
               {diff !== null && (
                 <span
-                  className={`text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 ${
+                  className={`text-xs font-bold px-2 py-1 rounded-lg flex items-center gap-1 flex-shrink-0 ${
                     diff < -PROFILE.strengthDropPct
                       ? 'bg-red-950 text-red-400 border border-red-800'
                       : diff > 0
@@ -229,25 +231,25 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
             )}
 
             {/* Set headers */}
-            <div className="flex items-center gap-2 text-xs text-gray-500 px-1 mb-1">
-              <span className="w-7">Set</span>
-              <span className="flex-1 text-center">kg</span>
-              <span className="flex-1 text-center">Reps</span>
-              <span className="w-10 text-center">Done</span>
+            <div className="grid grid-cols-[28px_1fr_1fr_36px] gap-1.5 text-xs text-gray-500 px-0.5 mb-1">
+              <span>Set</span>
+              <span className="text-center">kg</span>
+              <span className="text-center">Reps</span>
+              <span className="text-center">✓</span>
             </div>
 
             {/* Set rows */}
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {sets[ex]?.map((s, si) => {
                 const isDone = completedSets[ex]?.[si];
                 return (
                   <div
                     key={si}
-                    className={`flex items-center gap-2 transition-opacity ${
+                    className={`grid grid-cols-[28px_1fr_1fr_36px] gap-1.5 items-center transition-opacity ${
                       isDone ? 'opacity-50' : ''
                     }`}
                   >
-                    <span className="text-gray-500 text-sm w-7 text-center">
+                    <span className="text-gray-500 text-sm text-center">
                       {si + 1}
                     </span>
                     <input
@@ -258,7 +260,7 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
                       onChange={(e) =>
                         updateSet(ex, si, 'weight', e.target.value)
                       }
-                      className="flex-1 bg-gray-800 rounded-xl h-10 text-center text-white border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      className="w-full min-w-0 bg-gray-800 rounded-lg h-10 text-center text-white border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
                     />
                     <input
                       type="number"
@@ -268,17 +270,17 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
                       onChange={(e) =>
                         updateSet(ex, si, 'reps', e.target.value)
                       }
-                      className="flex-1 bg-gray-800 rounded-xl h-10 text-center text-white border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      className="w-full min-w-0 bg-gray-800 rounded-lg h-10 text-center text-white border border-gray-700 focus:border-blue-500 focus:outline-none text-sm"
                     />
                     <button
                       onClick={() => completeSet(ex, si)}
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                      className={`w-9 h-10 rounded-lg flex items-center justify-center transition-colors ${
                         isDone
                           ? 'bg-emerald-600 text-white'
                           : 'bg-gray-800 text-gray-600 border border-gray-700 hover:border-emerald-600'
                       }`}
                     >
-                      <Check size={16} />
+                      <Check size={14} />
                     </button>
                   </div>
                 );
@@ -286,7 +288,7 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
             </div>
 
             {/* Add/Remove set buttons */}
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-3 mt-2">
               <button
                 onClick={() => addSet(ex)}
                 className="text-xs text-blue-400 flex items-center gap-1 hover:text-blue-300"
@@ -321,7 +323,6 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
         <Save size={20} /> Save Workout
       </button>
 
-      {/* Bottom spacer when timer is visible so content isn't hidden */}
       {timerVisible && <div className="h-20" />}
 
       {/* ============ FLOATING REST TIMER ============ */}
@@ -332,31 +333,29 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 80, opacity: 0 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="fixed bottom-16 left-0 right-0 z-30 px-4"
+            className="fixed bottom-16 left-0 right-0 z-30 px-3"
           >
             <div className="max-w-lg mx-auto">
               <div
-                className={`rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg transition-colors duration-300 ${
+                className={`rounded-2xl px-3 py-3 flex items-center justify-between shadow-lg transition-colors duration-300 ${
                   timerFinished
                     ? 'bg-emerald-600'
                     : 'bg-gray-800 border border-blue-500'
                 }`}
               >
-                {/* Left: icon + time */}
-                <div className="flex items-center gap-3">
-                  <Timer size={20} className={timerFinished ? 'text-white' : 'text-blue-400'} />
+                <div className="flex items-center gap-2.5">
+                  <Timer size={18} className={timerFinished ? 'text-white' : 'text-blue-400'} />
                   <div>
-                    <p className="text-xs opacity-75">
+                    <p className="text-[10px] opacity-75 leading-tight">
                       {timerFinished ? 'Rest Complete!' : 'Resting…'}
                     </p>
-                    <p className="text-2xl font-bold font-mono leading-tight">
+                    <p className="text-xl font-bold font-mono leading-tight">
                       {formatTime(timerSeconds)}
                     </p>
                   </div>
                 </div>
 
-                {/* Right: adjust + dismiss */}
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1">
                   <button
                     onClick={() =>
                       setTimerSeconds((prev) => Math.max(0, prev - 15))
@@ -375,9 +374,9 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
                   </button>
                   <button
                     onClick={dismissTimer}
-                    className="bg-white/20 hover:bg-white/30 rounded-lg w-8 h-8 flex items-center justify-center ml-1 transition-colors"
+                    className="bg-white/20 hover:bg-white/30 rounded-lg w-7 h-7 flex items-center justify-center ml-0.5 transition-colors"
                   >
-                    <X size={14} />
+                    <X size={12} />
                   </button>
                 </div>
               </div>
