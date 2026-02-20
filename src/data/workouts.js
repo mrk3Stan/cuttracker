@@ -14,21 +14,23 @@ const WORKOUTS = {
       'Lat Pulldown',
       'Chest Supported Row',
       'Face Pull',
-      'DB Curl',
+      'Barbell Curl',
     ],
     'C – Legs': [
-      'Smith Squat',
+      'Squat',
       'Leg Press',
       'Hamstring Curl',
       'Calf Raises',
       'Plank',
     ],
     'Abs Day 1': [
-      'Leg Raises',
+      'Ab Wheel Rollouts',
       'Reverse Crunch',
+      'Leg Raises',
       'Plank',
     ],
     'Abs Day 2': [
+      'Ab Wheel Rollouts',
       'Dead Bug',
       'Side Plank',
       'Hollow Hold',
@@ -39,7 +41,7 @@ const WORKOUTS = {
   export const TRACKED_LIFTS = [
     'Incline Machine Press',
     'Deadlift / RDL',
-    'Smith Squat',
+    'Squat',
   ];
   
   export default WORKOUTS;
