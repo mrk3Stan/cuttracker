@@ -1,1 +1,33 @@
 @import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+  Theme-aware custom properties for elements that
+  Tailwind dark: variant can't reach (e.g. Recharts).
+*/
+:root {
+  --color-surface: #f9fafb;
+  --color-surface-2: #f3f4f6;
+  --color-surface-3: #e5e7eb;
+  --color-text-primary: #111827;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #9ca3af;
+  --color-border: #e5e7eb;
+  --color-chart-tick: #6b7280;
+  --color-tooltip-bg: #ffffff;
+  --color-tooltip-border: #e5e7eb;
+}
+
+.dark {
+  --color-surface: #030712;
+  --color-surface-2: #111827;
+  --color-surface-3: #1f2937;
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #6b7280;
+  --color-text-muted: #4b5563;
+  --color-border: #1f2937;
+  --color-chart-tick: #6b7280;
+  --color-tooltip-bg: #1f2937;
+  --color-tooltip-border: #374151;
+}

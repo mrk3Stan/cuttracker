@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -7,8 +7,23 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>CutTracker</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>" />
+  <script>
+    // Prevent flash of wrong theme on load
+    (function() {
+      var theme = localStorage.getItem('cuttracker_theme') || 'dark';
+      var effective = theme;
+      if (theme === 'auto') {
+        var h = new Date().getHours();
+        effective = (h >= 6 && h < 19) ? 'light' : 'dark';
+      }
+      document.documentElement.classList.add(effective);
+      if (effective === 'light') {
+        document.querySelector('meta[name="theme-color"]').setAttribute('content', '#f9fafb');
+      }
+    })();
+  </script>
 </head>
-<body class="bg-gray-950 text-white">
+<body>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
 </body>
