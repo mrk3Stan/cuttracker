@@ -1,7 +1,8 @@
-import React, { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft, Plus, Minus, Save, AlertTriangle, ArrowUp, ArrowDown,
+  Check, Timer, X,
 } from 'lucide-react';
 import Card from './Card';
 import WORKOUTS from '../data/workouts';
@@ -12,7 +13,7 @@ import { todayFormatted } from '../utils/dates';
 export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
   const exercises = WORKOUTS[workoutName];
 
-  // Initialize sets from last session or 3 empty sets
+  // --------------- SET STATE ---------------
   const [sets, setSets] = useState(() => {
     const lastSession = [...data.workouts]
       .reverse()
@@ -32,7 +33,60 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
     return initial;
   });
 
-  // Get previous session volume for comparison
+  // Track which sets are marked "done"
+  const [completedSets, setCompletedSets] = useState(() => {
+    const initial = {};
+    exercises.forEach((ex) => {
+      initial[ex] = [];
+    });
+    return initial;
+  });
+
+  // --------------- REST TIMER ---------------
+  const [timerActive, setTimerActive] = useState(false);
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [restTarget, setRestTarget] = useState(PROFILE.restPeriod || 90);
+
+  // Countdown: schedule one tick per second while active
+  useEffect(() => {
+    if (!timerActive || timerSeconds <= 0) return;
+    const timeout = setTimeout(() => {
+      setTimerSeconds((prev) => prev - 1);
+    }, 1000);
+    return () => clearTimeout(timeout);
+  }, [timerActive, timerSeconds]);
+
+  const timerFinished = timerActive && timerSeconds === 0;
+  const timerVisible = timerActive;
+
+  const startTimer = useCallback(() => {
+    setTimerSeconds(restTarget);
+    setTimerActive(true);
+  }, [restTarget]);
+
+  const dismissTimer = useCallback(() => {
+    setTimerActive(false);
+    setTimerSeconds(0);
+  }, []);
+
+  const formatTime = (secs) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m}:${s.toString().padStart(2, '0')}`;
+  };
+
+  // --------------- SET ACTIONS ---------------
+  const completeSet = (exercise, setIndex) => {
+    const wasCompleted = completedSets[exercise]?.[setIndex];
+    setCompletedSets((prev) => {
+      const updated = { ...prev };
+      updated[exercise] = [...(updated[exercise] || [])];
+      updated[exercise][setIndex] = !wasCompleted;
+      return updated;
+    });
+    if (!wasCompleted) startTimer();
+  };
+
   const getPrevVolume = (exerciseName) => {
     const sessions = data.workouts.filter((w) => w.name === workoutName);
     if (!sessions.length) return null;
@@ -81,6 +135,7 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
   };
 
   const handleSave = () => {
+    dismissTimer();
     const exerciseData = Object.entries(sets).map(([name, s]) => ({
       name,
       sets: s,
@@ -88,18 +143,49 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
     onSave(workoutName, exerciseData);
   };
 
+  const handleBack = () => {
+    dismissTimer();
+    onBack();
+  };
+
+  // --------------- RENDER ---------------
   return (
     <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
       {/* Back button */}
       <button
-        onClick={onBack}
+        onClick={handleBack}
         className="flex items-center gap-1 text-blue-400 mb-3 text-sm"
       >
         <ChevronLeft size={18} /> Back
       </button>
 
       <h1 className="text-xl font-bold mb-1">{workoutName}</h1>
-      <p className="text-gray-500 text-sm mb-4">{todayFormatted()}</p>
+      <p className="text-gray-500 text-sm mb-2">{todayFormatted()}</p>
+
+      {/* Rest Period Setting */}
+      <div className="flex items-center justify-between bg-gray-900 rounded-xl px-4 py-2.5 mb-4">
+        <div className="flex items-center gap-2 text-sm text-gray-400">
+          <Timer size={16} />
+          <span>Rest Period</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setRestTarget((prev) => Math.max(15, prev - 15))}
+            className="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 rounded-lg w-8 h-8 flex items-center justify-center text-gray-400 transition-colors"
+          >
+            <Minus size={14} />
+          </button>
+          <span className="text-white font-bold text-sm w-10 text-center">
+            {restTarget}s
+          </span>
+          <button
+            onClick={() => setRestTarget((prev) => prev + 15)}
+            className="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 rounded-lg w-8 h-8 flex items-center justify-center text-gray-400 transition-colors"
+          >
+            <Plus size={14} />
+          </button>
+        </div>
+      </div>
 
       {/* Exercise Cards */}
       {exercises.map((ex) => {
@@ -143,39 +229,60 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
             )}
 
             {/* Set headers */}
-            <div className="grid grid-cols-3 gap-2 text-xs text-gray-500 px-1 mb-1">
-              <span>Set</span>
-              <span className="text-center">kg</span>
-              <span className="text-center">Reps</span>
+            <div className="flex items-center gap-2 text-xs text-gray-500 px-1 mb-1">
+              <span className="w-7">Set</span>
+              <span className="flex-1 text-center">kg</span>
+              <span className="flex-1 text-center">Reps</span>
+              <span className="w-10 text-center">Done</span>
             </div>
 
             {/* Set rows */}
             <div className="space-y-2">
-              {sets[ex]?.map((s, si) => (
-                <div key={si} className="grid grid-cols-3 gap-2 items-center">
-                  <span className="text-gray-500 text-sm pl-1">{si + 1}</span>
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    value={s.weight || ''}
-                    placeholder="0"
-                    onChange={(e) =>
-                      updateSet(ex, si, 'weight', e.target.value)
-                    }
-                    className="bg-gray-800 rounded-xl h-10 text-center text-white border border-gray-700 focus:border-blue-500 focus:outline-none"
-                  />
-                  <input
-                    type="number"
-                    inputMode="numeric"
-                    value={s.reps || ''}
-                    placeholder="0"
-                    onChange={(e) =>
-                      updateSet(ex, si, 'reps', e.target.value)
-                    }
-                    className="bg-gray-800 rounded-xl h-10 text-center text-white border border-gray-700 focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-              ))}
+              {sets[ex]?.map((s, si) => {
+                const isDone = completedSets[ex]?.[si];
+                return (
+                  <div
+                    key={si}
+                    className={`flex items-center gap-2 transition-opacity ${
+                      isDone ? 'opacity-50' : ''
+                    }`}
+                  >
+                    <span className="text-gray-500 text-sm w-7 text-center">
+                      {si + 1}
+                    </span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={s.weight || ''}
+                      placeholder="0"
+                      onChange={(e) =>
+                        updateSet(ex, si, 'weight', e.target.value)
+                      }
+                      className="flex-1 bg-gray-800 rounded-xl h-10 text-center text-white border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    />
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      value={s.reps || ''}
+                      placeholder="0"
+                      onChange={(e) =>
+                        updateSet(ex, si, 'reps', e.target.value)
+                      }
+                      className="flex-1 bg-gray-800 rounded-xl h-10 text-center text-white border border-gray-700 focus:border-blue-500 focus:outline-none"
+                    />
+                    <button
+                      onClick={() => completeSet(ex, si)}
+                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors ${
+                        isDone
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-gray-800 text-gray-600 border border-gray-700 hover:border-emerald-600'
+                      }`}
+                    >
+                      <Check size={16} />
+                    </button>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Add/Remove set buttons */}
@@ -213,6 +320,71 @@ export default function WorkoutSession({ workoutName, data, onSave, onBack }) {
       >
         <Save size={20} /> Save Workout
       </button>
+
+      {/* Bottom spacer when timer is visible so content isn't hidden */}
+      {timerVisible && <div className="h-20" />}
+
+      {/* ============ FLOATING REST TIMER ============ */}
+      <AnimatePresence>
+        {timerVisible && (
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+            className="fixed bottom-16 left-0 right-0 z-30 px-4"
+          >
+            <div className="max-w-lg mx-auto">
+              <div
+                className={`rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg transition-colors duration-300 ${
+                  timerFinished
+                    ? 'bg-emerald-600'
+                    : 'bg-gray-800 border border-blue-500'
+                }`}
+              >
+                {/* Left: icon + time */}
+                <div className="flex items-center gap-3">
+                  <Timer size={20} className={timerFinished ? 'text-white' : 'text-blue-400'} />
+                  <div>
+                    <p className="text-xs opacity-75">
+                      {timerFinished ? 'Rest Complete!' : 'Resting…'}
+                    </p>
+                    <p className="text-2xl font-bold font-mono leading-tight">
+                      {formatTime(timerSeconds)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right: adjust + dismiss */}
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() =>
+                      setTimerSeconds((prev) => Math.max(0, prev - 15))
+                    }
+                    className="bg-white/20 hover:bg-white/30 rounded-lg px-2 py-1.5 text-xs font-bold transition-colors"
+                  >
+                    −15
+                  </button>
+                  <button
+                    onClick={() =>
+                      setTimerSeconds((prev) => prev + 15)
+                    }
+                    className="bg-white/20 hover:bg-white/30 rounded-lg px-2 py-1.5 text-xs font-bold transition-colors"
+                  >
+                    +15
+                  </button>
+                  <button
+                    onClick={dismissTimer}
+                    className="bg-white/20 hover:bg-white/30 rounded-lg w-8 h-8 flex items-center justify-center ml-1 transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
