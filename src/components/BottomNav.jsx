@@ -1,5 +1,6 @@
 import React from 'react';
 import { Home, Dumbbell, Utensils, Moon, TrendingDown } from 'lucide-react';
+import { useTheme } from '../contexts/ThemeContext';
 
 const TABS = [
   { id: 'home', label: 'Home', icon: Home },
@@ -10,8 +11,12 @@ const TABS = [
 ];
 
 export default function BottomNav({ activeTab, onTabChange }) {
+  const { isDark } = useTheme();
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 z-40">
+    <div className={`fixed bottom-0 left-0 right-0 z-40 border-t transition-colors duration-300 ${
+      isDark ? 'bg-gray-900 border-gray-800' : 'bg-white border-gray-200'
+    }`}>
       <div className="max-w-lg mx-auto flex">
         {TABS.map((tab) => {
           const Icon = tab.icon;
@@ -21,7 +26,11 @@ export default function BottomNav({ activeTab, onTabChange }) {
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
               className={`flex-1 flex flex-col items-center py-2.5 transition-colors ${
-                isActive ? 'text-blue-400' : 'text-gray-600'
+                isActive
+                  ? 'text-blue-500'
+                  : isDark
+                    ? 'text-gray-600'
+                    : 'text-gray-400'
               }`}
             >
               <Icon size={20} />
