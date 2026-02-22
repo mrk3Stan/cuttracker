@@ -6,11 +6,12 @@ import { motion } from 'framer-motion';
 import { Save, AlertTriangle } from 'lucide-react';
 import Card from './Card';
 import Stepper from './Stepper';
+import RecoveryScore from './RecoveryScore';
 import ChartTooltip from './ChartTooltip';
 import { useTheme } from '../contexts/ThemeContext';
 import { today, lastNDays, shortDate } from '../utils/dates';
 
-export default function SleepTracker({ data, alerts, logSleep }) {
+export default function SleepTracker({ data, alerts, logSleep, recoveryScore }) {
   const { isDark } = useTheme();
   const [hoursInput, setHoursInput] = useState('');
   const [energyInput, setEnergyInput] = useState(3);
@@ -53,6 +54,9 @@ export default function SleepTracker({ data, alerts, logSleep }) {
       <p className={`${textMuted} text-sm mb-4`}>
         Tracking recovery for training optimization
       </p>
+
+      {/* Recovery Score */}
+      <RecoveryScore recovery={recoveryScore} />
 
       <Card>
         <h2 className={`text-sm font-semibold ${textSecondary} uppercase tracking-wider mb-3`}>

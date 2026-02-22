@@ -9,6 +9,7 @@ import ProgressBar from './ProgressBar';
 import Stepper from './Stepper';
 import ChartTooltip from './ChartTooltip';
 import ThemeSwitcher from './ThemeSwitcher';
+import RecoveryScore from './RecoveryScore';
 import { useTheme } from '../contexts/ThemeContext';
 import PROFILE from '../data/profile';
 import { today, todayFormatted, lastNDays, shortDate } from '../utils/dates';
@@ -23,6 +24,7 @@ export default function Dashboard({
   todayNutrition,
   todaySteps,
   alerts,
+  recoveryScore,
   logWeight,
   logSteps,
   resetAll,
@@ -75,6 +77,9 @@ export default function Dashboard({
       <div className="mb-3">
         <ThemeSwitcher />
       </div>
+
+      {/* Recovery Score — the first thing you check in the morning */}
+      <RecoveryScore recovery={recoveryScore} />
 
       {/* Quick Weight Log */}
       <Card>

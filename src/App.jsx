@@ -26,6 +26,7 @@ export default function App() {
     todaySleep,
     weekCalAvg,
     alerts,
+    recoveryScore,  // ← ADD THIS
     logWeight,
     logNutrition,
     logSleep,
@@ -34,19 +35,16 @@ export default function App() {
     resetAll,
   } = useAppData();
 
-  // Handle tab changes — reset workout selection when leaving workout tab
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setSelectedWorkout(null);
   };
 
-  // Handle saving a workout session
   const handleSaveWorkout = (name, exercises) => {
     saveWorkout(name, exercises);
     setSelectedWorkout(null);
   };
 
-  // Render the active screen
   const renderScreen = () => {
     switch (activeTab) {
       case 'home':
@@ -60,6 +58,7 @@ export default function App() {
             todayNutrition={todayNutrition}
             todaySteps={todaySteps}
             alerts={alerts}
+            recoveryScore={recoveryScore}  // ← ADD THIS
             logWeight={logWeight}
             logSteps={logSteps}
             resetAll={resetAll}
@@ -100,6 +99,7 @@ export default function App() {
             data={data}
             alerts={alerts}
             logSleep={logSleep}
+            recoveryScore={recoveryScore}  // ← ADD THIS
           />
         );
 
