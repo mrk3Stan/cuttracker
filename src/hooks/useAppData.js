@@ -7,6 +7,7 @@ import {
   calcAverage,
   calcVolume,
 } from '../utils/calculations';
+import { calcRecoveryScore } from '../utils/recovery';  // ← ADD THIS
 import PROFILE from '../data/profile';
 import WORKOUTS from '../data/workouts';
 
@@ -43,6 +44,12 @@ export default function useAppData() {
   const todaySteps = data.steps[today()] || 0;
   const todaySleep = data.sleep[today()] || null;
 
+  // ← ADD THIS: Compute today's recovery score
+  const recoveryScore = useMemo(
+    () => calcRecoveryScore(today(), data),
+    [data]
+  );
+
   const weekCalAvg = useMemo(() => {
     const vals = lastNDays(7).map((d) => data.nutrition[d]?.calories).filter(Boolean);
     return vals.length > 0 ? Math.round(calcAverage(vals)) : null;
@@ -51,7 +58,6 @@ export default function useAppData() {
   const alerts = useMemo(() => {
     const result = [];
 
-    // Sleep < 6 hours for 3 consecutive days
     const sleep3 = lastNDays(PROFILE.sleepWarningDays)
       .map((d) => data.sleep[d]?.hours)
       .filter((h) => h !== undefined);
@@ -65,7 +71,6 @@ export default function useAppData() {
       });
     }
 
-    // Average sleep under 5 hours
     const sleep7 = lastNDays(7).map((d) => data.sleep[d]?.hours).filter((h) => h !== undefined);
     const avgSleep = sleep7.length > 0 ? calcAverage(sleep7) : 8;
     if (avgSleep < PROFILE.sleepDeloadHours) {
@@ -75,7 +80,6 @@ export default function useAppData() {
       });
     }
 
-    // Weight stable for 2 weeks
     const weights14 = lastNDays(14).map((d) => data.weights[d]).filter(Boolean);
     if (weights14.length >= 4) {
       const half = Math.floor(weights14.length / 2);
@@ -89,7 +93,6 @@ export default function useAppData() {
       }
     }
 
-    // Calories too low
     if (weekCalAvg && weekCalAvg < PROFILE.calWarningMin) {
       result.push({
         type: 'amber',
@@ -97,7 +100,6 @@ export default function useAppData() {
       });
     }
 
-    // Strength declining
     const checkDecline = (wkName) => {
       const sessions = data.workouts.filter((w) => w.name === wkName);
       if (sessions.length >= 3) {
@@ -191,6 +193,7 @@ export default function useAppData() {
     todaySleep,
     weekCalAvg,
     alerts,
+    recoveryScore,  // ← ADD THIS
     logWeight,
     logNutrition,
     logSleep,

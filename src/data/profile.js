@@ -20,6 +20,12 @@ const PROFILE = {
   sleepDeloadHours: 5,    // hours — average sleep triggering deload suggestion
   strengthDropPct: 5,     // % — volume drop triggering recovery warning
   restPeriod: 90,         // seconds — default rest period between sets
+
+  // Recovery Score thresholds
+  recoveryGreenMin: 70,   // score >= 70 → green (train hard)
+  recoveryAmberMin: 40,   // score 40–69 → amber (train light)
+                           // score < 40 → red (rest)
+  sleepIdealHours: 8,     // hours — ideal sleep for max score
 };
 
 export default PROFILE;
